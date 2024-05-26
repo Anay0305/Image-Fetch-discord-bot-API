@@ -316,7 +316,7 @@ def lb_(icon, name, guild_id, banner, requester, mode:str, typee:str, data, curr
 
     return image_binary
     
-def server_top(guild_id, guild_name, icon, mem_ids, chan_ids, data, guild_banner=None):
+def server_top(guild_name, icon, mem_ids, chan_ids, data, guild_banner=None):
     width = 1033
     height = 502
     banner = guild_banner
@@ -493,7 +493,6 @@ def generate_leaderboard():
 @app.route('/server_top', methods=['POST'])
 def generate_server_top():
     data = request.json
-    guild_id = data.get('guild_id')
     guild_name = data.get('guild_name')
     icon = data.get('icon')
     mem_ids = data.get('mem_ids')
@@ -501,7 +500,7 @@ def generate_server_top():
     xd = data.get('data')
     guild_banner = data.get('guild_banner')
 
-    result = server_top(guild_id, guild_name, icon, mem_ids, chan_ids, xd, guild_banner)
+    result = server_top(guild_name, icon, mem_ids, chan_ids, xd, guild_banner)
 
     return send_file(result, mimetype='image/png')
 
