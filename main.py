@@ -61,7 +61,7 @@ def lb_(icon, name, guild_id, banner, requester, mode:str, typee:str, data, curr
             file.close()
         image = image.resize((width,height))
     else:
-        _res = requests.get(banner.url)
+        _res = requests.get(banner)
         image = Image.open(BytesIO(_res.content)).convert("RGBA")
         image = image.resize((width,height))
         image = image.filter(ImageFilter.GaussianBlur(radius=2))
@@ -221,7 +221,6 @@ def server_top(guild_id, guild_name, icon, mem_ids, chan_ids, data, guild_banner
             voice.append(voice[-1])
     coun = 0
     for i in voice:
-        print(i)
         draw.text( (x_cords[1], y_cords[coun]), f"{i[0]}d", fill="white", font=font, anchor="mm")
         if i[1] == "":
             draw.text( (x_cords1[1], y_cords[coun]), f"0 hours", fill="white", font=font1, anchor="lm")
@@ -251,7 +250,6 @@ def server_top(guild_id, guild_name, icon, mem_ids, chan_ids, data, guild_banner
             break
     for i in data['top_member_vc']:
         if i[0] in mem_ids:
-            print(i)
             name = i[1]['display_name']
             n = name
             while name_font.getlength(name) >= 140:
@@ -274,7 +272,6 @@ def server_top(guild_id, guild_name, icon, mem_ids, chan_ids, data, guild_banner
             break
     for i in data['top_channel_vc']:
         if i[0] in chan_ids:
-            print(i)
             name = i[1]['name']
             n = name
             while name_font.getlength(name) >= 128:
