@@ -507,10 +507,8 @@ def generate_server_top():
 @app.route('/git_pull', methods=['GET'])
 def git_pull():
     try:
-        # Execute the git pull command
         result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
-
-        # Check if the command executed successfully
+        
         if result.returncode == 0:
             output = result.stdout
             return jsonify({'success': True, 'output': output}), 200
