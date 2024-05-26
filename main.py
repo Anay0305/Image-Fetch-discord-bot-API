@@ -1,8 +1,10 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 from io import BytesIO
 from datetime import datetime
+import discord
 import requests
+import subprocess
 
 app = Flask(__name__)
 
@@ -48,6 +50,159 @@ def converttime(seconds):
     if seconds != 0:
         ls.append(f"{seconds}secs")
     return ' '.join(ls)
+
+def profile(pfp, user_name, user_id, bf_dic, totaltime, s_dic, f_dic, t_dic, p_ls, bot_bdg: list[str], user_bdg: list[str], total_cmd, user_rank, title):
+    #response = requests.get("https://media.discordapp.net/attachments/1208408003703734282/1239335638709440582/Picsart_24-05-13_03-27-14-507.jpg?ex=66448702&is=66433582&hm=aaa675e8e5e8693aa0e9c620154363d08805ec53cf52e252e79dc1eed9b71705&=&format=webp&width=909&height=511")
+    width = 1280
+    height = 720
+    xd = []
+    for i in bot_bdg:
+        xd.append(discord.PartialEmoji.from_str(i))
+    bot_bdg = xd
+    xdd = []
+    for i in user_bdg:
+        xdd.append(discord.PartialEmoji.from_str(i))
+    user_bdg = xdd
+
+    with open("Images/profile_bg.jpg", 'rb') as file:
+        image = Image.open(BytesIO(file.read())).convert("RGBA")
+        file.close()
+    image = image.resize((width,height))
+    draw = ImageDraw.Draw(image)
+    pfp = pfp.replace("gif", "png").replace("webp", "png").replace("jpeg", "png")
+    logo_res = requests.get(pfp)
+    AVATAR_SIZE = 128
+    avatar_image = Image.open(BytesIO(logo_res.content)).convert("RGB")
+    avatar_image = avatar_image.resize((AVATAR_SIZE, AVATAR_SIZE)) #
+    circle_image = Image.new('L', (AVATAR_SIZE, AVATAR_SIZE))
+    circle_draw = ImageDraw.Draw(circle_image)
+    circle_draw.ellipse((0, 0, AVATAR_SIZE, AVATAR_SIZE), fill=255)
+    image.paste(avatar_image, (160, 120), circle_image)
+    font = ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 28)
+    draw.text( (300, 120), f"{str(user_name)}", fill="black", font=font)
+    px = 300
+    for i in user_bdg:
+        url = i.url
+        url = url.replace("gif", "png").replace("webp", "png").replace("jpeg", "png")
+        res = requests.get(url)
+        size = 28
+        avatar_image = Image.open(BytesIO(res.content)).convert("RGBA")
+        avatar_image = avatar_image.resize((size, size))
+        pixel_data = avatar_image.load()
+        background_color = (0, 0, 0)
+        for y in range(avatar_image.size[1]):
+            for x in range(avatar_image.size[0]):
+                if pixel_data[x, y] == background_color:
+                    pixel_data[x, y] = (0, 0, 0, 0)
+        #circle_image = Image.new('L', (spotify_size, spotify_size))
+        #circle_draw = ImageDraw.Draw(circle_image)
+        #circle_draw.ellipse((0, 0, spotify_size, spotify_size), fill=255)
+        image.paste(avatar_image, (px, 158), avatar_image)
+        px+=32
+    if title is not None:
+        draw.text( (300, 184), text=title.title(), font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 28), fill="black")
+    px = 300
+    for i in bot_bdg:
+        url = i.url
+        url = url.replace("gif", "png").replace("webp", "png").replace("jpeg", "png")
+        res = requests.get(url)
+        size = 28
+        avatar_image = Image.open(BytesIO(res.content)).convert("RGBA")
+        avatar_image = avatar_image.resize((size, size))
+        pixel_data = avatar_image.load()
+        background_color = (0, 0, 0)
+        for y in range(avatar_image.size[1]):
+            for x in range(avatar_image.size[0]):
+                if pixel_data[x, y] == background_color:
+                    pixel_data[x, y] = (0, 0, 0, 0)
+        #circle_image = Image.new('L', (spotify_size, spotify_size))
+        #circle_draw = ImageDraw.Draw(circle_image)
+        #circle_draw.ellipse((0, 0, spotify_size, spotify_size), fill=255)
+        image.paste(avatar_image, (px, 222), avatar_image)
+        px+=32
+    #draw.rounded_rectangle((970, 0, 1180, 50), radius=3, fill=(255, 0, 0, 128))
+    draw.text( (640, 28), text="Gateway", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(165,42,42), anchor="mm")
+    #draw.rounded_rectangle((100, 0, 310, 50), radius=3, fill=(255, 0, 0, 128))
+    draw.text( (215, 28), text=f"Rank #{user_rank}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
+    count = 1
+    for i in bf_dic:
+        if user_id == i:
+            break
+        count +=1
+    if user_id not in bf_dic:
+        draw.text( (1065, 28), text="Music Rank Null", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
+    else:
+        draw.text( (1065, 28), text=f"Music Rank #{count}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
+    tt = converttime(totaltime)
+    if tt is None or tt == "":
+        tt = "0m"
+    draw.text((990, 215), text=f"Total Commands Runned:\n{total_cmd}\nTotal Listening Time:\n{tt}", font=ImageFont.truetype('Fonts/Alkatra-SemiBold.ttf', 28), fill="black", anchor="mm")
+    mask = Image.new('RGBA', image.size, (0, 0, 0, 0))
+    draw.text( (110, 305), text="Your Playlists", font=ImageFont.truetype('Fonts/Alkatra-SemiBold.ttf', 24), fill=(165,42,42), anchor="lt")
+    p_pixel = 305
+    count = 0
+    for i, j, k in p_ls:
+        if count >= 3:
+            break
+        count +=1
+        p_pixel+=25
+        k = converttime(k)
+        draw.text( (110, p_pixel), text=f"{count}. {i} ({j} songs) - {k}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+    if len(p_ls) == 0:
+        draw.text( (110, 330), text=f"No Playlist Found", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+
+    draw.text( (665, 353), text="Top Servers", font=ImageFont.truetype('Fonts/Alkatra-SemiBold.ttf', 26), fill=(165,42,42), anchor="lt")
+    p_pixel = 357
+    count = 0
+    for i in s_dic:
+        if count >= 5:
+            break
+        count +=1
+        p_pixel+=25
+        k = converttime(s_dic[i])
+        n = i[:-1]
+        draw.text( (665, p_pixel), text=f"{count}. {k} - {n}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+    if len(s_dic) == 0:
+        draw.text( (665, 384), text="No Data", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+
+    draw.text( (110, 435), text="Top Friends", font=ImageFont.truetype('Fonts/Alkatra-SemiBold.ttf', 24), fill=(165,42,42), anchor="lt")
+    p_pixel = 435
+    count = 0
+    for i in f_dic:
+        if count >= 3:
+            break
+        count +=1
+        p_pixel+=25
+        k = converttime(f_dic[i])
+        n = i[:-1]
+        x = f"{count}. {k} - {n}"
+        if len(x) >= 42:
+            x = x[:40]+"..."
+        draw.text( (110, p_pixel), text=f"{x}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+    if len(f_dic) == 0 :
+        draw.text( (110, 460), text="No Data", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+
+    draw.text( (110, 567), text="Top Tracks", font=ImageFont.truetype('Fonts/Alkatra-SemiBold.ttf', 24), fill=(165,42,42), anchor="lt")
+    p_pixel = 567
+    count = 0
+    for i in t_dic:
+        if count >= 3:
+            break
+        count +=1
+        p_pixel+=25
+        k = converttime(t_dic[i])
+        x = f"{count}. {k} - {i}"
+        if len(x) >= 100:
+            x = x[:95]+"..."
+        draw.text( (110, p_pixel), text=f"{x}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+    if len(t_dic) == 0:
+        draw.text( (110, 592), text="No Data", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 22), fill="black", anchor="lt")
+
+    image_binary = BytesIO()
+    image.save(image_binary, 'PNG')
+    image_binary.seek(0)
+
+    return image_binary
 
 def lb_(icon, name, guild_id, banner, requester, mode:str, typee:str, data, current, total, start_date, end_date=None):
     width = 960
@@ -293,6 +448,28 @@ def server_top(guild_id, guild_name, icon, mem_ids, chan_ids, data, guild_banner
 
     return image_binary
 
+@app.route('/profile', methods=['POST'])
+def generate_profile():
+    data = request.json
+    pfp = data.get('pfp')
+    user_name = data.get('user_name')
+    user_id = data.get('user_id')
+    bf_dic = data.get('bf_dic')
+    totaltime = data.get('totaltime')
+    s_dic = data.get('s_dic')
+    f_dic = data.get('f_dic')
+    t_dic = data.get('t_dic')
+    p_ls = data.get('p_ls')
+    bot_bdg = data.get('bot_bdg')
+    user_bdg = data.get('user_bdg')
+    total_cmd = data.get('total_cmd')
+    user_rank = data.get('user_rank')
+    title = data.get('title')
+
+    result = profile(pfp, user_name, user_id, bf_dic, totaltime, s_dic, f_dic, t_dic, p_ls, bot_bdg, user_bdg, total_cmd, user_rank, title)
+
+    return send_file(result, mimetype='image/png')
+
 @app.route('/leaderboard', methods=['POST'])
 def generate_leaderboard():
     data = request.json
@@ -327,6 +504,23 @@ def generate_server_top():
     result = server_top(guild_id, guild_name, icon, mem_ids, chan_ids, xd, guild_banner)
 
     return send_file(result, mimetype='image/png')
+
+@app.route('/git_pull', methods=['GET'])
+def git_pull():
+    try:
+        # Execute the git pull command
+        result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
+
+        # Check if the command executed successfully
+        if result.returncode == 0:
+            output = result.stdout
+            return jsonify({'success': True, 'output': output}), 200
+        else:
+            error_message = result.stderr
+            return jsonify({'success': False, 'error': error_message}), 500
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
