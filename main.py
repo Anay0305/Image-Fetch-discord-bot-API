@@ -129,7 +129,12 @@ def lb_(icon, name, guild_id, banner, requester, mode:str, typee:str, data, curr
         c+=1
         logo_res = requests.get(data[i][2])
         AVATAR_SIZE = 52
-        avatar_image = Image.open(BytesIO(logo_res.content)).convert("RGB")
+        try:
+            avatar_image = Image.open(BytesIO(logo_res.content)).convert("RGB")
+        except:
+            print(data[i][2])
+            logo_res = requests.get("https://cdn.discordapp.com/avatars/880765863953858601/2fa5ec0d3cc8d354bf51833543d5074a.png?size=1024")
+            avatar_image = Image.open(BytesIO(logo_res.content)).convert("RGB")
         avatar_image = avatar_image.resize((int(AVATAR_SIZE), int(AVATAR_SIZE)))
         mask = Image.new('L', (int(AVATAR_SIZE), int(AVATAR_SIZE)), 0)
         circle_draw = ImageDraw.Draw(mask)
