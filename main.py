@@ -51,7 +51,7 @@ def converttime(seconds):
         ls.append(f"{seconds}secs")
     return ' '.join(ls)
 
-def profile(pfp, user_name, user_id, bf_dic, totaltime, s_dic, f_dic, t_dic, p_ls, bot_bdg: list[str], user_bdg: list[str], total_cmd, user_rank, title):
+def profile(pfp, user_name, m_rank, totaltime, s_dic, f_dic, t_dic, p_ls, bot_bdg: list[str], user_bdg: list[str], total_cmd, user_rank, title):
     #response = requests.get("https://media.discordapp.net/attachments/1208408003703734282/1239335638709440582/Picsart_24-05-13_03-27-14-507.jpg?ex=66448702&is=66433582&hm=aaa675e8e5e8693aa0e9c620154363d08805ec53cf52e252e79dc1eed9b71705&=&format=webp&width=909&height=511")
     width = 1280
     height = 720
@@ -124,15 +124,7 @@ def profile(pfp, user_name, user_id, bf_dic, totaltime, s_dic, f_dic, t_dic, p_l
     draw.text( (640, 28), text="Gateway", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(165,42,42), anchor="mm")
     #draw.rounded_rectangle((100, 0, 310, 50), radius=3, fill=(255, 0, 0, 128))
     draw.text( (215, 28), text=f"Rank #{user_rank}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
-    count = 1
-    for i in bf_dic:
-        if user_id == i:
-            break
-        count +=1
-    if user_id not in bf_dic:
-        draw.text( (1065, 28), text="Music Rank Null", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
-    else:
-        draw.text( (1065, 28), text=f"Music Rank #{count}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
+    draw.text( (1065, 28), text=f"Music Rank {m_rank}", font=ImageFont.truetype('Fonts/Alkatra-Medium.ttf', 34), fill=(0, 10, 36), anchor="mm")
     tt = converttime(totaltime)
     if tt is None or tt == "":
         tt = "0m"
@@ -453,8 +445,7 @@ def generate_profile():
     data = request.json
     pfp = data.get('pfp')
     user_name = data.get('user_name')
-    user_id = data.get('user_id')
-    bf_dic = data.get('bf_dic')
+    m_rank = data.get('m_rank')
     totaltime = data.get('totaltime')
     s_dic = data.get('s_dic')
     f_dic = data.get('f_dic')
@@ -466,7 +457,7 @@ def generate_profile():
     user_rank = data.get('user_rank')
     title = data.get('title')
 
-    result = profile(pfp, user_name, user_id, bf_dic, totaltime, s_dic, f_dic, t_dic, p_ls, bot_bdg, user_bdg, total_cmd, user_rank, title)
+    result = profile(pfp, user_name, m_rank, totaltime, s_dic, f_dic, t_dic, p_ls, bot_bdg, user_bdg, total_cmd, user_rank, title)
 
     return send_file(result, mimetype='image/png')
 
@@ -508,7 +499,7 @@ def generate_server_top():
 def git_pull():
     try:
         result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
-        
+
         if result.returncode == 0:
             output = result.stdout
             return jsonify({'success': True, 'output': output}), 200
