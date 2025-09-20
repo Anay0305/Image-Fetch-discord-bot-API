@@ -1,6 +1,6 @@
-# Discord Graphics API
+# Card Graphics API
 
-Discord Graphics API is a lightweight, Flask-based microservice that generates dynamic visuals for Discord communities. From personalized profile cards to stylish leaderboards, it adds a professional, engaging touch to Discord bots and servers.
+Card Graphics API is a lightweight, Flask-based microservice that generates dynamic visuals for Discord communities. From personalized profile cards to stylish leaderboards, it adds a professional, engaging touch to Discord bots and servers.
 
 ## Features
 
